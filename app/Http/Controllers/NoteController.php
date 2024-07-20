@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Note;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class NoteController extends Controller
 {
@@ -12,15 +13,7 @@ class NoteController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        return response()->json(Auth::user()->notes, 200);
     }
 
     /**
@@ -28,7 +21,13 @@ class NoteController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $note = new Note();
+        $note->title = $request->title;
+        $note->text = $request->text;
+        $note->user_id = Auth::id();
+        $note->save();
+
+        return response()->json($note, 201);
     }
 
     /**
@@ -36,15 +35,11 @@ class NoteController extends Controller
      */
     public function show(Note $note)
     {
-        //
-    }
+        if (Auth::id() !== $note->user_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Note $note)
-    {
-        //
+        return response()->json($note, 200);
     }
 
     /**
@@ -52,7 +47,15 @@ class NoteController extends Controller
      */
     public function update(Request $request, Note $note)
     {
-        //
+        if (Auth::id() !== $note->user_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $note->title = $request->title;
+        $note->text = $request->text;
+        $note->save();
+
+        return response()->json($note, 200);
     }
 
     /**
@@ -60,6 +63,12 @@ class NoteController extends Controller
      */
     public function destroy(Note $note)
     {
-        //
+        if (Auth::id() !== $note->user_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $note->delete();
+
+        return response()->json($note);
     }
 }
